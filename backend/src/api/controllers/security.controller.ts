@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 
-import { SecurityOrchestratorService } from "../../security/orchestrator/security-orchestrator.service";
+import { SecurityJob } from "../../queue/jobs/security.job";
 
 export class SecurityController {
   static async run(
@@ -16,12 +16,12 @@ export class SecurityController {
         });
       }
 
-      const result =
-        await SecurityOrchestratorService.run(
-          repositoryId
-        );
+      const job = await SecurityJob.add(repositoryId);
 
-      return res.status(200).json(result);
+      return res.status(202).json({
+        message: "Security scan queued",
+        jobId: job.id,
+      });
     } catch (error: any) {
       return res.status(500).json({
         message: error.message,

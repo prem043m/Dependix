@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { prisma } from "../../database/prisma";
+import { GovernanceOrchestratorService } from "../../governance/governance-orchestrator.service";
 
 export class GovernanceController {
   static async getComplianceSummary(req: Request, res: Response) {
@@ -64,6 +65,30 @@ export class GovernanceController {
       }
 
       return res.status(200).json(repository);
+    } catch (error: any) {
+      return res.status(500).json({
+        message: error.message,
+      });
+    }
+  }
+
+  static async evaluate(req: Request, res: Response) {
+    try {
+      const { repositoryId } = req.params;
+      const { pullNumber } = req.body;
+
+      if (typeof repositoryId !== "string" || repositoryId.trim() === "") {
+        return res.status(400).json({
+          message: "repositoryId is required",
+        });
+      }
+
+      const result = await GovernanceOrchestratorService.evaluate(
+        repositoryId,
+        pullNumber ? Number(pullNumber) : undefined
+      );
+
+      return res.status(200).json(result);
     } catch (error: any) {
       return res.status(500).json({
         message: error.message,

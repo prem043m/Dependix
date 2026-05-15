@@ -1,13 +1,8 @@
 import { Request, Response } from "express";
-
 import { prisma } from "../../database/prisma";
-
 import { parseGitHubRepo } from "../../utils/repo-parser";
-
 import { GitHubService } from "../../services/github/github.service";
-
 import { RepositoryAnalyzerService } from "../../services/analyzer/repository-analyzer.service";
-
 import { StackDetectorService } from "../../services/detector/stack-detector.service";
 import { PipelineGeneratorService } from "../../services/pipeline/pipeline-generator.service";
 
@@ -24,18 +19,12 @@ export class RepositoryController {
 
       const { owner, repo } = parseGitHubRepo(repoUrl);
 
-      const repository =
-        await GitHubService.getRepository(owner, repo);
-
+      const repository = await GitHubService.getRepository(owner, repo);
       const tree = await GitHubService.getRepositoryTree(owner, repo);
-
       const files = tree.map((item: any) => item.path);
 
-      const analysis =
-        RepositoryAnalyzerService.analyze(files);
-
-      const detection =
-        StackDetectorService.detect(analysis);
+      const analysis = RepositoryAnalyzerService.analyze(files);
+      const detection = StackDetectorService.detect(analysis);
 
       const result = await prisma.$transaction(async (tx) => {
         const savedRepo = await tx.repository.upsert({
@@ -74,19 +63,17 @@ export class RepositoryController {
           },
         });
 
-        const pipeline =
-          await PipelineGeneratorService.createForRepository(
-            {
-              repositoryId: savedRepo.id,
-              language: detection.language,
-              framework: detection.framework,
-              packageManager:
-                detection.packageManager,
-              hasDocker: detection.hasDocker,
-              defaultBranch: repository.default_branch,
-            },
-            tx
-          );
+        const pipeline = await PipelineGeneratorService.createForRepository(
+          {
+            repositoryId: savedRepo.id,
+            language: detection.language,
+            framework: detection.framework,
+            packageManager: detection.packageManager,
+            hasDocker: detection.hasDocker,
+            defaultBranch: repository.default_branch,
+          },
+          tx
+        );
 
         return {
           repository: savedRepo,
@@ -96,24 +83,84 @@ export class RepositoryController {
       });
 
       // Push workflow to GitHub
-      await GitHubService.createWorkflowFile(
-        owner,
-        repo,
-        result.pipeline.yamlContent
-      );
+      try {
+        await GitHubService.createWorkflowFile(
+          owner,
+          repo,
+          result.pipeline.yamlContent
+        );
+      } catch (ghError) {
+        console.error("Failed to push workflow to GitHub:", ghError);
+      }
 
       return res.status(201).json(result);
     } catch (error: any) {
       if (error?.status === 401) {
         return res.status(401).json({
-          message:
-            "GitHub authentication failed. Set a valid GITHUB_TOKEN or remove the placeholder token from backend/.env.",
+          message: "GitHub authentication failed. Set a valid GITHUB_TOKEN.",
         });
       }
+      return res.status(500).json({ message: error.message });
+    }
+  }
 
-      return res.status(500).json({
-        message: error.message,
+  static async list(req: Request, res: Response) {
+    try {
+      const repositories = await prisma.repository.findMany({
+        include: {
+          analysis: true,
+          securityScans: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
+          },
+          governanceDecisions: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
+          },
+        },
       });
+
+      const formatted = repositories.map(repo => ({
+        ...repo,
+        latestScan: repo.securityScans[0] || null,
+        latestGovernance: repo.governanceDecisions[0] || null,
+      }));
+
+      return res.status(200).json({ repositories: formatted });
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+    }
+  }
+
+  static async get(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const repository = await prisma.repository.findUnique({
+        where: { id },
+        include: {
+          analysis: true,
+          securityScans: {
+            orderBy: { createdAt: "desc" },
+          },
+          governanceDecisions: {
+            orderBy: { createdAt: "desc" },
+          },
+        },
+      });
+
+      if (!repository) {
+        return res.status(404).json({ message: "Repository not found" });
+      }
+
+      return res.status(200).json({
+        repository: {
+          ...repository,
+          latestScan: repository.securityScans[0] || null,
+          latestGovernance: repository.governanceDecisions[0] || null,
+        }
+      });
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message });
     }
   }
 }

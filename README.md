@@ -55,10 +55,17 @@ Apply the Prisma schema to your local database:
 npx prisma db push
 ```
 
-### 5. Start the Server
-Run the development server:
+### 5. Start the System
+You need to run both the API server and the background worker:
+
+**Terminal 1 (API Server):**
 ```bash
 npm run dev
+```
+
+**Terminal 2 (Background Worker):**
+```bash
+npm run worker
 ```
 The server will be running at `http://localhost:5000`.
 
@@ -78,23 +85,42 @@ Automatically detects the stack and generates a CI pipeline.
   }
   ```
 
-**Example (Windows/curl.exe):**
-```powershell
-curl.exe -X POST http://localhost:5000/repositories -H "Content-Type: application/json" -d '{\"repoUrl\": \"https://github.com/expressjs/express\"}'
-```
-
-### 2. Run Security Scan
-Triggers Snyk, Trivy, and Gitleaks scans on the repository.
+### 2. Queue Security Scan
+Triggers Snyk, Trivy, and Gitleaks scans in the background.
 
 **Request:**
 - **URL**: `POST /security/:repositoryId/run`
 
-**Example (Windows/curl.exe):**
-```powershell
-curl.exe -X POST http://localhost:5000/security/YOUR_REPO_ID_HERE/run
+**Response:**
+```json
+{
+  "message": "Security scan queued",
+  "jobId": "1"
+}
 ```
 
----
+### 3. Check Scan Status
+Monitor the progress and result of a queued scan.
+
+**Request:**
+- **URL**: `GET /jobs/:jobId`
+
+**Example:**
+```powershell
+curl.exe http://localhost:5000/jobs/1
+```
+
+### 4. Evaluate Governance
+Assesses repository risk and determines if it's safe to merge.
+
+**Request:**
+- **URL**: `POST /governance/:repositoryId/evaluate`
+- **Body (Optional)**:
+  ```json
+  {
+    "pullNumber": 42
+  }
+  ```
 
 ## 🛠️ Tech Stack
 

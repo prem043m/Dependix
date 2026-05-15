@@ -1,62 +1,57 @@
 import { prisma } from "../database/prisma";
-
 import { RiskEvaluatorService } from "./risk/risk-evaluator.service";
-
 import { PolicyEngineService } from "./policies/policy-engine.service";
-
 import { GovernanceReportService } from "./reports/governance-report.service";
+import { AutoMergeService } from "./merge/auto-merge.service";
 
 export class GovernanceOrchestratorService {
   static async evaluate(
-    repositoryId: string
+    repositoryId: string,
+    pullNumber?: number
   ) {
-    const latestScan =
-      await prisma.securityScan.findFirst({
-        where: {
-          repositoryId,
-        },
+    const repository = await prisma.repository.findUnique({
+      where: { id: repositoryId }
+    });
 
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
-
-    if (!latestScan) {
-      throw new Error(
-        "No security scan found"
-      );
+    if (!repository) {
+      throw new Error("Repository not found");
     }
 
-    const risk =
-      RiskEvaluatorService.evaluate(
-        latestScan
-      );
+    const latestScan = await prisma.securityScan.findFirst({
+      where: { repositoryId },
+      orderBy: { createdAt: "desc" },
+    });
 
-    const policy =
-      PolicyEngineService.evaluate(
-        risk
-      );
+    if (!latestScan) {
+      throw new Error("No security scan found");
+    }
 
-    const report =
-      GovernanceReportService.generate(
-        risk,
-        policy
-      );
+    const risk = RiskEvaluatorService.evaluate(latestScan);
+    const policy = PolicyEngineService.evaluate(risk);
+    const report = GovernanceReportService.generate(risk, policy);
 
-    const decision =
-      await prisma.governanceDecision.create({
-        data: {
-          repositoryId,
+    const decision = await prisma.governanceDecision.create({
+      data: {
+        repositoryId,
+        riskLevel: risk.riskLevel,
+        autoMerge: policy.autoMerge,
+        blocked: policy.blocked,
+        reason: policy.reason,
+      },
+    });
 
-          riskLevel: risk.riskLevel,
-
-          autoMerge: policy.autoMerge,
-
-          blocked: policy.blocked,
-
-          reason: policy.reason,
-        },
-      });
+    // Automatically merge if policy allows and pull number is provided
+    if (policy.autoMerge && pullNumber) {
+      try {
+        await AutoMergeService.mergePullRequest(
+          repository.owner,
+          repository.name,
+          pullNumber
+        );
+      } catch (error: any) {
+        console.error("Auto-merge failed:", error.message);
+      }
+    }
 
     return {
       report,
