@@ -27,6 +27,10 @@ export class JobController {
         progress,
         result,
         failedReason,
+        repositoryId:
+          typeof job.data?.repositoryId === "string"
+            ? job.data.repositoryId
+            : null,
         timestamp: job.timestamp,
       });
     } catch (error: any) {
@@ -51,6 +55,10 @@ export class JobController {
           id: job.id,
           state: await job.getState(),
           progress: job.progress,
+          repositoryId:
+            typeof job.data?.repositoryId === "string"
+              ? job.data.repositoryId
+              : null,
           timestamp: job.timestamp,
         }))
       );

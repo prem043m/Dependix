@@ -6,7 +6,6 @@ import {
   type PipelineGenerationInput,
 } from "../../generators/workflow-builder";
 import { YAMLGenerator } from "../../generators/yaml-generator";
-import { GitHubService } from "../github/github.service";
 
 type RepositoryPipelineInput = PipelineGenerationInput & {
   repositoryId: string;
@@ -55,12 +54,6 @@ export class PipelineGeneratorService {
       hasDocker: repository.analysis.hasDocker,
       defaultBranch: repository.defaultBranch,
     });
-
-    await GitHubService.createWorkflowFile(
-      repository.owner,
-      repository.name,
-      pipeline.yamlContent
-    );
 
     return pipeline;
   }

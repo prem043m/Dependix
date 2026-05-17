@@ -6,6 +6,7 @@ import repositoryRoutes from "./api/routes/repository.router";
 import securityRoutes from "./api/routes/security.routes";
 import governanceRoutes from "./api/routes/governance.routes";
 import jobRoutes from "./api/routes/job.routes";
+import { prisma } from "./database/prisma";
 import { DependencyRiskService } from "./governance/risk/dependencyRisk.service";
 import { GithubPRService } from "./github/github-pr.service";
 import { RenovateGovernanceService } from "./governance/renovate/renovate-governance.service";
@@ -23,27 +24,68 @@ app.use(cors({
 app.use(express.json());
 
 app.post("/dependencies/:repositoryId/check", async (req, res) => {
-  const repositoryId = req.params.repositoryId;
+  try {
+    const repositoryId = req.params.repositoryId;
 
-  console.log("Running Renovate:", repositoryId);
+    if (typeof repositoryId !== "string" || repositoryId.trim() === "") {
+      return res.status(400).json({
+        message: "repositoryId is required",
+      });
+    }
 
-  emitRealtimeEvent("dependency-check-started", {
-    repositoryId,
-    status: "RUNNING",
-  });
+    const repository = await prisma.repository.findUnique({
+      where: {
+        id: repositoryId,
+      },
+    });
 
-  setTimeout(() => {
+    if (!repository) {
+      return res.status(404).json({
+        message: "Repository not found",
+      });
+    }
+
+    emitRealtimeEvent("dependency-check-started", {
+      repositoryId,
+      status: "RUNNING",
+      repositoryName: `${repository.owner}/${repository.name}`,
+    });
+
+    const prs = await GithubPRService.getRenovatePRs(
+      repository.owner,
+      repository.name
+    );
+
+    const evaluations = (
+      await Promise.all(
+        prs.map((pr) => RenovateGovernanceService.evaluatePR(pr))
+      )
+    ).filter((evaluation) => evaluation !== null);
+
     emitRealtimeEvent("dependency-check-completed", {
       repositoryId,
-      status: "SIMULATED",
-      message: "Renovate scan started",
+      status: "COMPLETED",
+      repositoryName: `${repository.owner}/${repository.name}`,
+      evaluationsCount: evaluations.length,
+      highRiskCount: evaluations.filter(
+        (evaluation) =>
+          evaluation.risk.risk === "HIGH" ||
+          evaluation.risk.risk === "MANUAL_REVIEW" ||
+          evaluation.security?.critical
+      ).length,
     });
-  }, 150);
 
-  return res.json({
-    success: true,
-    message: "Renovate scan started",
-  });
+    return res.json({
+      success: true,
+      message: "Dependency governance refreshed",
+      repositoryId,
+      evaluations,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      message: error.message,
+    });
+  }
 });
 
 app.post("/dependencies/evaluate", async (req, res) => {
@@ -60,33 +102,95 @@ app.post("/dependencies/evaluate", async (req, res) => {
 
 app.get("/governance/renovate", async (req, res) => {
   try {
-    const owner =
+    const repositoryId =
+      typeof req.query.repositoryId === "string"
+        ? req.query.repositoryId
+        : undefined;
+
+    const requestedOwner =
       typeof req.query.owner === "string"
         ? req.query.owner
         : process.env.GITHUB_RENOVATE_OWNER;
 
-    const repo =
+    const requestedRepo =
       typeof req.query.repo === "string"
         ? req.query.repo
         : process.env.GITHUB_RENOVATE_REPO;
 
-    if (!owner || !repo) {
-      return res.status(400).json({
-        message:
-          "Configure GITHUB_RENOVATE_OWNER and GITHUB_RENOVATE_REPO, or pass owner and repo query parameters.",
+    let repositories: Array<{
+      id: string;
+      owner: string;
+      name: string;
+      url: string;
+    }> = [];
+
+    if (repositoryId) {
+      const repository = await prisma.repository.findUnique({
+        where: {
+          id: repositoryId,
+        },
+      });
+
+      if (!repository) {
+        return res.status(404).json({
+          message: "Repository not found",
+        });
+      }
+
+      repositories = [repository];
+    } else if (requestedOwner && requestedRepo) {
+      repositories = [
+        {
+          id: `${requestedOwner}/${requestedRepo}`,
+          owner: requestedOwner,
+          name: requestedRepo,
+          url: `https://github.com/${requestedOwner}/${requestedRepo}`,
+        },
+      ];
+    } else {
+      repositories = await prisma.repository.findMany({
+        orderBy: {
+          createdAt: "desc",
+        },
       });
     }
 
-    const prs = await GithubPRService.getRenovatePRs(owner, repo);
     const evaluations = (
       await Promise.all(
-        prs.map((pr) => RenovateGovernanceService.evaluatePR(pr))
+        repositories.map(async (repository) => {
+          const prs = await GithubPRService.getRenovatePRs(
+            repository.owner,
+            repository.name
+          );
+
+          const repositoryEvaluations = (
+            await Promise.all(
+              prs.map((pr) => RenovateGovernanceService.evaluatePR(pr))
+            )
+          )
+            .filter((evaluation) => evaluation !== null)
+            .map((evaluation) => ({
+              ...evaluation,
+              repository: {
+                id: repository.id,
+                owner: repository.owner,
+                name: repository.name,
+                url: repository.url,
+              },
+            }));
+
+          return repositoryEvaluations;
+        })
       )
-    ).filter((evaluation) => evaluation !== null);
+    ).flat();
 
     return res.json({
-      owner,
-      repo,
+      repositories: repositories.map((repository) => ({
+        id: repository.id,
+        owner: repository.owner,
+        name: repository.name,
+        url: repository.url,
+      })),
       evaluations,
     });
   } catch (error: any) {

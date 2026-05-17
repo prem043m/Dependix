@@ -11,14 +11,30 @@
   ],
   "activationEvents": [
     "onStartupFinished",
+    "onCommand:devsecops.registerRepository",
     "onCommand:devsecops.runSecurityScan",
-    "onCommand:devsecops.evaluateDependencyRisk",
-    "onView:devsecopsSidebar",
-    "onView:renovateSidebar"
+    "onCommand:devsecops.checkDependencies",
+    "onCommand:devsecops.analyzeWorkflow",
+    "onView:repositoriesView",
+    "onView:vulnerabilitiesView",
+    "onView:dependencyGovernanceView",
+    "onView:securityScansView",
+    "onView:scanHistoryView",
+    "onView:governanceAlertsView"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
+      {
+        "command": "devsecops.registerRepository",
+        "title": "Register Repository",
+        "icon": "$(repo-create)"
+      },
+      {
+        "command": "devsecops.refreshPlatform",
+        "title": "Refresh DevSecOps Data",
+        "icon": "$(refresh)"
+      },
       {
         "command": "devsecops.runSecurityScan",
         "title": "Run Security Scan",
@@ -30,13 +46,29 @@
         "icon": "$(package)"
       },
       {
-        "command": "devsecops.refreshRepositories",
-        "title": "Refresh Repositories",
-        "icon": "$(refresh)"
+        "command": "devsecops.analyzeWorkflow",
+        "title": "Analyze Workflow",
+        "icon": "$(symbol-method)"
       },
       {
-        "command": "devsecops.evaluateDependencyRisk",
-        "title": "Evaluate Dependency Risk"
+        "command": "devsecops.openRepository",
+        "title": "Open GitHub Repository",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "devsecops.viewRepositoryDetails",
+        "title": "View Repository Details",
+        "icon": "$(preview)"
+      },
+      {
+        "command": "devsecops.openRenovatePullRequest",
+        "title": "Open Renovate Pull Request",
+        "icon": "$(git-pull-request)"
+      },
+      {
+        "command": "devsecops.viewDependencyDetails",
+        "title": "View Dependency Details",
+        "icon": "$(preview)"
       }
     ],
     "viewsContainers": {
@@ -51,52 +83,113 @@
     "views": {
       "devsecops": [
         {
-          "id": "devsecopsSidebar",
-          "name": "Control Center"
+          "id": "repositoriesView",
+          "name": "Repositories"
         },
         {
-          "id": "renovateSidebar",
+          "id": "vulnerabilitiesView",
+          "name": "Vulnerabilities"
+        },
+        {
+          "id": "dependencyGovernanceView",
           "name": "Dependency Governance"
+        },
+        {
+          "id": "securityScansView",
+          "name": "Security Scans"
+        },
+        {
+          "id": "scanHistoryView",
+          "name": "Scan History"
+        },
+        {
+          "id": "governanceAlertsView",
+          "name": "Governance Alerts"
         }
       ]
     },
     "viewsWelcome": [
       {
-        "view": "devsecopsSidebar",
-        "contents": "Security checks for your repositories will appear here.\n[Refresh repositories](command:devsecops.refreshRepositories)"
+        "view": "repositoriesView",
+        "contents": "Register repositories and inspect live governance data here.\n[Register repository](command:devsecops.registerRepository)"
       },
       {
-        "view": "renovateSidebar",
-        "contents": "Live Renovate pull request intelligence will appear here.\n[Refresh governance](command:devsecops.refreshRepositories)"
+        "view": "dependencyGovernanceView",
+        "contents": "Live Renovate pull request intelligence will appear here.\n[Refresh platform data](command:devsecops.refreshPlatform)"
       }
     ],
+    "configuration": {
+      "title": "DevSecOps Assistant",
+      "properties": {
+        "devsecops.backendUrl": {
+          "type": "string",
+          "default": "http://localhost:5000",
+          "description": "Base URL for the DevSecOps governance backend."
+        }
+      }
+    },
     "menus": {
       "view/title": [
         {
-          "command": "devsecops.refreshRepositories",
-          "when": "view == devsecopsSidebar",
+          "command": "devsecops.registerRepository",
+          "when": "view == repositoriesView",
           "group": "navigation"
         },
         {
-          "command": "devsecops.refreshRepositories",
-          "when": "view == renovateSidebar",
+          "command": "devsecops.refreshPlatform",
+          "when": "view == repositoriesView || view == vulnerabilitiesView || view == dependencyGovernanceView || view == securityScansView || view == scanHistoryView || view == governanceAlertsView",
           "group": "navigation"
         }
       ],
       "view/item/context": [
         {
           "command": "devsecops.runSecurityScan",
-          "when": "view == devsecopsSidebar && viewItem == repository",
+          "when": "view == repositoriesView && viewItem == repository",
           "group": "inline"
         },
         {
           "command": "devsecops.checkDependencies",
-          "when": "view == devsecopsSidebar && viewItem == repository",
+          "when": "view == repositoriesView && viewItem == repository",
           "group": "inline"
         },
         {
-          "command": "devsecops.refreshRepositories",
-          "when": "view == devsecopsSidebar",
+          "command": "devsecops.analyzeWorkflow",
+          "when": "view == repositoriesView && viewItem == repository",
+          "group": "inline"
+        },
+        {
+          "command": "devsecops.openRepository",
+          "when": "view == repositoriesView && viewItem == repository",
+          "group": "inline"
+        },
+        {
+          "command": "devsecops.viewRepositoryDetails",
+          "when": "view == repositoriesView && viewItem == repository",
+          "group": "navigation"
+        },
+        {
+          "command": "devsecops.viewRepositoryDetails",
+          "when": "view == vulnerabilitiesView && viewItem == vulnerability",
+          "group": "inline"
+        },
+        {
+          "command": "devsecops.viewRepositoryDetails",
+          "when": "view == securityScansView && viewItem == securityScan",
+          "group": "inline"
+        },
+        {
+          "command": "devsecops.viewRepositoryDetails",
+          "when": "view == governanceAlertsView && viewItem == governanceAlert",
+          "group": "inline"
+        },
+        {
+          "command": "devsecops.openRenovatePullRequest",
+          "when": "view == dependencyGovernanceView && viewItem == dependency",
+          "group": "inline"
+        },
+        {
+          "command": "devsecops.viewDependencyDetails",
+          "when": "view == dependencyGovernanceView && viewItem == dependency",
           "group": "navigation"
         }
       ]
