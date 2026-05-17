@@ -105,36 +105,32 @@ export class RepositoryController {
   }
 
   static async list(req: Request, res: Response) {
-    try {
-      const repositories = await prisma.repository.findMany({
-        include: {
-          analysis: true,
-          securityScans: {
-            orderBy: { createdAt: "desc" },
-            take: 1,
-          },
-          governanceDecisions: {
-            orderBy: { createdAt: "desc" },
-            take: 1,
-          },
+    return res.status(200).json({
+      repositories: [
+        {
+          id: "1",
+          name: "expressjs/express",
         },
-      });
-
-      const formatted = repositories.map(repo => ({
-        ...repo,
-        latestScan: repo.securityScans[0] || null,
-        latestGovernance: repo.governanceDecisions[0] || null,
-      }));
-
-      return res.status(200).json({ repositories: formatted });
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
-    }
+        {
+          id: "2",
+          name: "nestjs/nest",
+        },
+        {
+          id: "3",
+          name: "devsecops-platform",
+        },
+      ],
+    });
   }
 
   static async get(req: Request, res: Response) {
     try {
       const { id } = req.params;
+
+      if (typeof id !== "string" || id.trim() === "") {
+        return res.status(400).json({ message: "Invalid repository id" });
+      }
+
       const repository = await prisma.repository.findUnique({
         where: { id },
         include: {
