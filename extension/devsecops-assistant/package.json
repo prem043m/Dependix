@@ -1,0 +1,135 @@
+{
+  "name": "devsecops-assistant",
+  "displayName": "DevSecOps Assistant",
+  "description": "A structured sidebar for repository security scans and dependency checks.",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.120.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:devsecops.runSecurityScan",
+    "onCommand:devsecops.evaluateDependencyRisk",
+    "onView:devsecopsSidebar",
+    "onView:renovateSidebar"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "devsecops.runSecurityScan",
+        "title": "Run Security Scan",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "devsecops.checkDependencies",
+        "title": "Check Dependencies",
+        "icon": "$(package)"
+      },
+      {
+        "command": "devsecops.refreshRepositories",
+        "title": "Refresh Repositories",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "devsecops.evaluateDependencyRisk",
+        "title": "Evaluate Dependency Risk"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "devsecops",
+          "title": "DevSecOps",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "devsecops": [
+        {
+          "id": "devsecopsSidebar",
+          "name": "Control Center"
+        },
+        {
+          "id": "renovateSidebar",
+          "name": "Dependency Governance"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "devsecopsSidebar",
+        "contents": "Security checks for your repositories will appear here.\n[Refresh repositories](command:devsecops.refreshRepositories)"
+      },
+      {
+        "view": "renovateSidebar",
+        "contents": "Live Renovate pull request intelligence will appear here.\n[Refresh governance](command:devsecops.refreshRepositories)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "devsecops.refreshRepositories",
+          "when": "view == devsecopsSidebar",
+          "group": "navigation"
+        },
+        {
+          "command": "devsecops.refreshRepositories",
+          "when": "view == renovateSidebar",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "devsecops.runSecurityScan",
+          "when": "view == devsecopsSidebar && viewItem == repository",
+          "group": "inline"
+        },
+        {
+          "command": "devsecops.checkDependencies",
+          "when": "view == devsecopsSidebar && viewItem == repository",
+          "group": "inline"
+        },
+        {
+          "command": "devsecops.refreshRepositories",
+          "when": "view == devsecopsSidebar",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "npm run check-types && npm run lint && node esbuild.js",
+    "watch": "npm-run-all -p watch:*",
+    "watch:esbuild": "node esbuild.js --watch",
+    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "package": "npm run check-types && npm run lint && node esbuild.js --production",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "@types/vscode": "^1.120.0",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
+    "esbuild": "^0.27.3",
+    "eslint": "^9.39.3",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.1"
+  },
+  "dependencies": {
+    "axios": "^1.16.1",
+    "socket.io-client": "^4.8.3"
+  }
+}

@@ -5,6 +5,7 @@ import { GitHubService } from "../../services/github/github.service";
 import { RepositoryAnalyzerService } from "../../services/analyzer/repository-analyzer.service";
 import { StackDetectorService } from "../../services/detector/stack-detector.service";
 import { PipelineGeneratorService } from "../../services/pipeline/pipeline-generator.service";
+import { emitRealtimeEvent } from "../../realtime/socket.server";
 
 export class RepositoryController {
   static async register(req: Request, res: Response) {
@@ -82,16 +83,10 @@ export class RepositoryController {
         };
       });
 
-      // Push workflow to GitHub
-      try {
-        await GitHubService.createWorkflowFile(
-          owner,
-          repo,
-          result.pipeline.yamlContent
-        );
-      } catch (ghError) {
-        console.error("Failed to push workflow to GitHub:", ghError);
-      }
+      emitRealtimeEvent("repository-registered", {
+        repositoryId: result.repository.id,
+        repositoryName: `${result.repository.owner}/${result.repository.name}`,
+      });
 
       return res.status(201).json(result);
     } catch (error: any) {
@@ -105,22 +100,54 @@ export class RepositoryController {
   }
 
   static async list(req: Request, res: Response) {
-    return res.status(200).json({
-      repositories: [
-        {
-          id: "1",
-          name: "expressjs/express",
+    try {
+      const repositories = await prisma.repository.findMany({
+        orderBy: {
+          createdAt: "desc",
         },
-        {
-          id: "2",
-          name: "nestjs/nest",
+        include: {
+          analysis: true,
+          securityScans: {
+            orderBy: {
+              createdAt: "desc",
+            },
+            take: 1,
+          },
+          governanceDecisions: {
+            orderBy: {
+              createdAt: "desc",
+            },
+            take: 1,
+          },
+          pipelines: {
+            orderBy: {
+              createdAt: "desc",
+            },
+            take: 1,
+          },
         },
-        {
-          id: "3",
-          name: "devsecops-platform",
-        },
-      ],
-    });
+      });
+
+      return res.status(200).json({
+        repositories: repositories.map(
+          ({
+            securityScans,
+            governanceDecisions,
+            pipelines,
+            ...repository
+          }) => ({
+            ...repository,
+            latestScan: securityScans[0] ?? null,
+            latestGovernance: governanceDecisions[0] ?? null,
+            latestPipeline: pipelines[0] ?? null,
+          })
+        ),
+      });
+    } catch (error: any) {
+      return res.status(500).json({
+        message: error.message,
+      });
+    }
   }
 
   static async get(req: Request, res: Response) {
