@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-
+import "./queue/schedulers/scan.scheduler";
 dotenv.config();
 
 import app from "./app";
