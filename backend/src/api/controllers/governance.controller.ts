@@ -57,6 +57,9 @@ export class GovernanceController {
           securityScans: {
             orderBy: { createdAt: "desc" },
           },
+          governanceDecisions: {
+            orderBy: { createdAt: "desc" },
+          },
         },
       });
 

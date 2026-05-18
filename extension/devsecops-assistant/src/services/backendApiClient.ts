@@ -150,6 +150,47 @@ export class BackendApiClient {
         return response.evaluations;
     }
 
+    async getRenovateGovernanceForRepository(
+        repositoryId: string
+    ): Promise<RenovateEvaluation[]> {
+        const response =
+            await this.request<{
+                evaluations: RenovateEvaluation[];
+            }>({
+                method: 'GET',
+                url: `/governance/renovate?repositoryId=${encodeURIComponent(repositoryId)}`
+            });
+
+        return response.evaluations;
+    }
+
+    async getRepositoryGovernance(
+        repositoryId: string
+    ): Promise<RepositoryDetail> {
+        const response =
+            await this.request<RepositoryDetail>({
+                method: 'GET',
+                url: `/governance/repository/${repositoryId}`
+            });
+
+        return response;
+    }
+
+    async getRepositoryDependencyUpdates(
+        repositoryId: string
+    ): Promise<any[]> {
+        const response =
+            await this.request<{
+                repositoryId: string;
+                dependencyUpdates: any[];
+            }>({
+                method: 'GET',
+                url: `/dependencies/repository/${repositoryId}`
+            });
+
+        return response.dependencyUpdates;
+    }
+
     getBackendUrl(): string {
         return ConfigurationService.getBackendUrl();
     }

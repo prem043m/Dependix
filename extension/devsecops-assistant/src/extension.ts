@@ -100,7 +100,7 @@ export function activate(
         {
             apiClient,
             outputChannel: channel,
-            refreshAll
+            refreshAll,
         }
     );
 
@@ -109,7 +109,7 @@ export function activate(
             apiClient.getBackendUrl(),
             channel,
             statusBarItem,
-            refreshAll
+            refreshAll,
         );
 
     liveUpdatesClient.connect();

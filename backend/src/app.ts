@@ -75,6 +75,26 @@ app.post("/dependencies/:repositoryId/check", async (req, res) => {
       ).length,
     });
 
+    // Persist dependency evaluations: clear old data and save new
+    await (prisma as any).dependencyUpdate.deleteMany({
+      where: { repositoryId },
+    });
+
+    if (evaluations.length > 0) {
+      await (prisma as any).dependencyUpdate.createMany({
+        data: evaluations.map((evaluation: any) => ({
+          repositoryId,
+          packageName: evaluation.dependency || "unknown",
+          currentVersion: "18.0.0",
+          latestVersion: evaluation.newVersion || "unknown",
+          updateType: "dependency-update",
+          vulnerable: evaluation.security?.critical ?? false,
+          severity: null,
+          autoMerge: evaluation.risk?.recommendation === "Safe to merge",
+        })),
+      });
+    }
+
     return res.json({
       success: true,
       message: "Dependency governance refreshed",
@@ -98,6 +118,38 @@ app.post("/dependencies/evaluate", async (req, res) => {
   });
 
   return res.json(result);
+});
+
+app.get("/dependencies/repository/:repositoryId", async (req, res) => {
+  try {
+    const { repositoryId } = req.params;
+
+    if (typeof repositoryId !== "string") {
+      return res.status(400).json({ message: "Invalid repositoryId" });
+    }
+
+    const repository = await prisma.repository.findUnique({
+      where: { id: repositoryId },
+    });
+
+    if (!repository) {
+      return res.status(404).json({ message: "Repository not found" });
+    }
+
+    const dependencyUpdates = await (prisma as any).dependencyUpdate.findMany({
+      where: { repositoryId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return res.status(200).json({
+      repositoryId,
+      dependencyUpdates,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      message: error.message,
+    });
+  }
 });
 
 app.get("/governance/renovate", async (req, res) => {

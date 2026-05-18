@@ -141,6 +141,11 @@ export class RepositoryController {
             },
             take: 1,
           },
+          dependencyUpdates: {
+            orderBy: {
+              createdAt: "desc",
+            },
+          },
         },
       });
 
@@ -150,12 +155,14 @@ export class RepositoryController {
             securityScans,
             governanceDecisions,
             pipelines,
+            dependencyUpdates,
             ...repository
           }) => ({
             ...repository,
             latestScan: securityScans[0] ?? null,
             latestGovernance: governanceDecisions[0] ?? null,
             latestPipeline: pipelines[0] ?? null,
+            dependencyUpdates,
           })
         ),
       });
@@ -182,6 +189,9 @@ export class RepositoryController {
             orderBy: { createdAt: "desc" },
           },
           governanceDecisions: {
+            orderBy: { createdAt: "desc" },
+          },
+          dependencyUpdates: {
             orderBy: { createdAt: "desc" },
           },
         },

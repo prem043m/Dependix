@@ -19,6 +19,7 @@ model Repository {
   pipelines         Pipeline[]
   securityScans     SecurityScan[]
   governanceDecisions GovernanceDecision[]
+  dependencyUpdates DependencyUpdate[]
 }
 
 model Analysis {
@@ -68,6 +69,21 @@ model GovernanceDecision {
   riskLevel      String     @default("medium")
   autoMerge      Boolean    @default(false)
   blocking       Boolean    @default(false)
+  reason         String?
+  createdAt      DateTime   @default(now())
+  repository     Repository @relation(fields: [repositoryId], references: [id])
+}
+
+model DependencyUpdate {
+  id             String     @id @default(uuid())
+  repositoryId   String
+  packageName    String
+  currentVersion String
+  latestVersion  String
+  updateType     String
+  vulnerable     Boolean    @default(false)
+  severity       String?
+  autoMerge      Boolean    @default(false)
   createdAt      DateTime   @default(now())
   repository     Repository @relation(fields: [repositoryId], references: [id])
 }

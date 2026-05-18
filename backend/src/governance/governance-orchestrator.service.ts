@@ -35,7 +35,7 @@ export class GovernanceOrchestratorService {
         repositoryId,
         riskLevel: risk.riskLevel,
         autoMerge: policy.autoMerge,
-        blocked: policy.blocked,
+        blocking: policy.blocked,
         reason: policy.reason,
       },
     });

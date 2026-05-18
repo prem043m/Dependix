@@ -16,6 +16,12 @@ async function getJobSnapshot(jobId: string) {
     (job?.returnvalue as
       | {
           overallStatus?: string;
+          governanceDecision?: {
+            riskLevel?: string;
+            autoMerge?: boolean;
+            blocked?: boolean;
+            reason?: string;
+          };
         }
       | undefined) ?? undefined;
 
@@ -63,6 +69,7 @@ export function startSecurityEventsBridge() {
       jobId,
       repositoryId: snapshot.repositoryId,
       status: snapshot.returnvalue?.overallStatus ?? "COMPLETED",
+      governanceDecision: snapshot.returnvalue?.governanceDecision ?? null,
     });
   });
 

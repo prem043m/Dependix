@@ -5,6 +5,7 @@ import { TrivyScanner } from "../scanners/trivy.scanner";
 import { GitleaksScanner } from "../scanners/gitleaks.scanner";
 import { SecurityReportParser } from "../parsers/security-report.parser";
 import { PolicyEngineService } from "../policies/policy-engine.service";
+import { GovernanceOrchestratorService } from "../../governance/governance-orchestrator.service";
 import path from "node:path";
 import fs from "node:fs";
 import os from "node:os";
@@ -89,9 +90,19 @@ export class SecurityOrchestratorService {
         )
       );
 
+      // Evaluate governance decision after scans complete
+      let governanceDecision = null;
+      try {
+        const governanceResult = await GovernanceOrchestratorService.evaluate(repositoryId);
+        governanceDecision = governanceResult.decision;
+      } catch (e) {
+        console.error("Governance evaluation failed:", e);
+      }
+
       return {
         scans: savedScans,
         overallStatus: savedScans.every((s) => s.status === "PASSED") ? "PASSED" : "FAILED",
+        governanceDecision,
       };
     } finally {
       if (fs.existsSync(cloneDir)) {
