@@ -1,44 +1,113 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <path d="M128,64 
-           L288,32 
-           C384,80 448,160 448,272 
-           C448,400 336,464 288,480 
-           C240,464 128,400 128,272 
-           Z" 
-        fill="none" 
-        stroke="#4364F7" 
-        stroke-width="28" 
-        stroke-linejoin="round" />
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
 
-  <path d="M200,120 
-           L200,392 
-           M190,140 
-           L270,140 
-           C340,140 380,180 380,256 
-           C380,332 340,372 270,372 
-           L190,372" 
-        fill="none" 
-        stroke="#00d2ff" 
-        stroke-width="24" 
-        stroke-linecap="round" 
-        stroke-linejoin="round" />
+  <!-- Background -->
+  <rect width="512" height="512" rx="72" fill="#020817"/>
 
-  <line x1="270" y1="140" x2="360" y2="70" stroke="#00d2ff" stroke-width="12" stroke-linecap="round"/>
-  <circle cx="360" cy="70" r="20" fill="#00F260" />
+  <!-- Gradients -->
+  <defs>
+    <linearGradient id="grad1" x1="80" y1="80" x2="420" y2="420" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A855F7"/>
+      <stop offset="0.5" stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#14B8A6"/>
+    </linearGradient>
+  </defs>
 
-  <line x1="380" y1="256" x2="460" y2="256" stroke="#00d2ff" stroke-width="12" stroke-linecap="round"/>
-  <circle cx="460" cy="256" r="24" fill="#4364F7" />
+  <!-- Top Connection Lines -->
+  <path d="M150 210
+           C150 250 170 260 190 260
+           H256
+           H322
+           C342 260 362 250 362 210"
+        stroke="url(#grad1)"
+        stroke-width="14"
+        stroke-linecap="round"
+        fill="none"/>
 
-  <line x1="200" y1="290" x2="110" y2="350" stroke="#4364F7" stroke-width="12" stroke-linecap="round"/>
-  <circle cx="110" cy="350" r="20" fill="#00d2ff" />
+  <!-- Center Vertical Line -->
+  <path d="M256 150V330"
+        stroke="url(#grad1)"
+        stroke-width="14"
+        stroke-linecap="round"/>
 
-  <circle cx="200" cy="256" r="32" fill="#1e1e24" stroke="#00F260" stroke-width="10" />
-  <circle cx="200" cy="256" r="10" fill="#00F260" />
-  
-  <path d="M245,245 L270,270 L320,215" 
-        fill="none" 
-        stroke="#00F260" 
-        stroke-width="16" 
-        stroke-linecap="round" 
-        stroke-linejoin="round" />
+  <!-- Center Node -->
+  <circle cx="256" cy="260" r="18" fill="#3B82F6"/>
+
+  <!-- Left Cube -->
+  <g stroke="#A855F7" stroke-width="10" stroke-linejoin="round">
+    <path d="M110 110L150 85L190 110L150 135L110 110Z"/>
+    <path d="M110 110V160L150 185V135"/>
+    <path d="M190 110V160L150 185"/>
+  </g>
+
+  <!-- Middle Cube -->
+  <g stroke="#3B82F6" stroke-width="10" stroke-linejoin="round">
+    <path d="M216 70L256 45L296 70L256 95L216 70Z"/>
+    <path d="M216 70V120L256 145V95"/>
+    <path d="M296 70V120L256 145"/>
+  </g>
+
+  <!-- Right Cube -->
+  <g stroke="#14B8A6" stroke-width="10" stroke-linejoin="round">
+    <path d="M322 110L362 85L402 110L362 135L322 110Z"/>
+    <path d="M322 110V160L362 185V135"/>
+    <path d="M402 110V160L362 185"/>
+  </g>
+
+  <!-- Infinity Left -->
+  <path d="M120 360
+           C120 310 170 290 220 340"
+        stroke="#8B5CF6"
+        stroke-width="28"
+        stroke-linecap="round"
+        fill="none"/>
+
+  <path d="M220 340
+           C170 390 120 410 120 360"
+        stroke="#8B5CF6"
+        stroke-width="28"
+        stroke-linecap="round"
+        fill="none"/>
+
+  <!-- Infinity Right -->
+  <path d="M392 360
+           C392 310 342 290 292 340"
+        stroke="#14B8A6"
+        stroke-width="28"
+        stroke-linecap="round"
+        fill="none"/>
+
+  <path d="M292 340
+           C342 390 392 410 392 360"
+        stroke="#14B8A6"
+        stroke-width="28"
+        stroke-linecap="round"
+        fill="none"/>
+
+  <!-- Shield -->
+  <path d="M256 310
+           L318 340
+           V392
+           C318 430 292 455 256 470
+           C220 455 194 430 194 392
+           V340
+           Z"
+        fill="#FFFFFF"/>
+
+  <!-- Shield Inner -->
+  <path d="M256 330
+           L300 350
+           V388
+           C300 414 282 432 256 444
+           C230 432 212 414 212 388
+           V350
+           Z"
+        fill="#020817"/>
+
+  <!-- Check -->
+  <path d="M235 388L252 405L282 372"
+        stroke="#14B8A6"
+        stroke-width="12"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+
 </svg>
