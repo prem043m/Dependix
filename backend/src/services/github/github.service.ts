@@ -69,6 +69,22 @@ export class GitHubService {
     }
   }
 
+  /**
+   * SAFETY: Manual workflow file commit (NEVER called automatically)
+   * 
+   * ⚠️ CRITICAL GOVERNANCE RULE ⚠️
+   * This method is provided for MANUAL operations only.
+   * DO NOT CALL THIS AUTOMATICALLY during repository registration or pipeline generation.
+   * 
+   * Dependix is a CI/CD Governance Overlay System, NOT a workflow replacement system.
+   * 
+   * Automatic workflow commits violate the governance philosophy:
+   * - Existing workflows are respected and analyzed
+   * - New workflow recommendations remain in Dependix for manual review
+   * - Users must explicitly choose to implement recommendations
+   * 
+   * This method should ONLY be invoked by explicit user action (e.g., manual approval in UI).
+   */
   static async createWorkflowFile(
     owner: string,
     repo: string,

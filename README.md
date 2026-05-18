@@ -15,7 +15,7 @@ The platform provides:
 * distributed security scanning
 * real-time DevSecOps insights directly inside VS Code
 
----
+---     
 
 # Architecture Overview
 

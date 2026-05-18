@@ -7,6 +7,21 @@ import { StackDetectorService } from "../../services/detector/stack-detector.ser
 import { PipelineGeneratorService } from "../../services/pipeline/pipeline-generator.service";
 import { emitRealtimeEvent } from "../../realtime/socket.server";
 
+/**
+ * CI/CD Governance Overlay Safety Rules:
+ * 
+ * 1. If repository has existing CI/CD workflows:
+ *    - DO NOT create/overwrite workflows
+ *    - DO NOT push files to repository
+ *    - ONLY: detect, analyze, generate governance recommendations
+ * 
+ * 2. If repository has NO CI/CD:
+ *    - Generate OPTIONAL starter workflow recommendations
+ *    - DO NOT automatically commit or push
+ *    - Workflows remain in Dependix for manual review only
+ * 
+ * CRITICAL: Dependix is a CI/CD Governance Overlay System, NOT a workflow replacement system.
+ */
 export class RepositoryController {
   static async register(req: Request, res: Response) {
     try {
@@ -64,6 +79,7 @@ export class RepositoryController {
           },
         });
 
+        // Generate governance overlay recommendations (never auto-committed)
         const pipeline = await PipelineGeneratorService.createForRepository(
           {
             repositoryId: savedRepo.id,

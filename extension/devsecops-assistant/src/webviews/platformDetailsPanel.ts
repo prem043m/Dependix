@@ -89,15 +89,19 @@ export class PlatformDetailsPanel {
             pipeline
                 ? `
                     <section class="card wide">
-                        <h2>Generated Workflow</h2>
-                        <p class="muted">${escapeHtml(pipeline.name)} | ${escapeHtml(formatDateTime(pipeline.createdAt))}</p>
+                        <h2>CI/CD Governance Overlay</h2>
+                        <p class="muted" style="background: var(--vscode-inputValidation-infoBackground); padding: 12px; border-radius: 4px; margin-bottom: 12px;">
+                            📋 <strong>Recommendation Mode:</strong> This workflow is a governance recommendation. It will NOT be automatically committed to your repository.
+                            Review it and manually implement if desired.
+                        </p>
+                        <p class="muted"><strong>Pipeline:</strong> ${escapeHtml(pipeline.name)} | ${escapeHtml(formatDateTime(pipeline.createdAt))}</p>
                         <pre>${escapeHtml(pipeline.yamlContent)}</pre>
                     </section>
                 `
                 : `
                     <section class="card wide">
-                        <h2>Generated Workflow</h2>
-                        <p class="muted">No stored workflow has been generated for this repository yet.</p>
+                        <h2>CI/CD Governance Overlay</h2>
+                        <p class="muted">No workflow recommendation has been generated for this repository yet.</p>
                     </section>
                 `;
 
