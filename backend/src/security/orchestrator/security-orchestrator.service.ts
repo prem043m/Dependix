@@ -5,9 +5,9 @@ import { TrivyScanner } from "../scanners/trivy.scanner";
 import { GitleaksScanner } from "../scanners/gitleaks.scanner";
 import { SecurityReportParser } from "../parsers/security-report.parser";
 import { PolicyEngineService } from "../policies/policy-engine.service";
-import path from "path";
-import fs from "fs";
-import os from "os";
+import path from "node:path";
+import fs from "node:fs";
+import os from "node:os";
 import simpleGit from "simple-git";
 
 export class SecurityOrchestratorService {

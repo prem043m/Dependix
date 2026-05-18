@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import "./queue/schedulers/scan.scheduler";
 dotenv.config();
 
-import { createServer } from "http";
+import { createServer } from "node:http";
 import app from "./app";
 import { startSecurityEventsBridge } from "./realtime/security-events.bridge";
 import { initializeSocketServer } from "./realtime/socket.server";

@@ -4,83 +4,71 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url = env("DATABASE_URL")
 }
 
 model Repository {
-  id            String   @id @default(uuid())
-  name          String
-  owner         String
-  url           String   @unique
-  defaultBranch String
-  visibility    String
-
+  id                String                @id @default(uuid())
+  name              String
+  owner             String
+  url               String                @unique
+  defaultBranch     String
+  visibility        String
+  createdAt         DateTime              @default(now())
   analysis          Analysis?
   pipelines         Pipeline[]
   securityScans     SecurityScan[]
   governanceDecisions GovernanceDecision[]
-
-  createdAt     DateTime @default(now())
 }
 
 model Analysis {
-  id             String   @id @default(uuid())
-
-  repositoryId   String   @unique
-
+  id             String     @id @default(uuid())
+  repositoryId   String     @unique
   language       String?
   framework      String?
   packageManager String?
-
-  hasDocker      Boolean @default(false)
-  hasCI          Boolean @default(false)
-
-  createdAt      DateTime @default(now())
-
-  repository Repository @relation(fields: [repositoryId], references: [id])
-}
-
-model SecurityScan {
-  id             String   @id @default(uuid())
-
-  repositoryId   String
-
-  tool           String
-  status         String
-
-  critical       Int @default(0)
-  high           Int @default(0)
-  medium         Int @default(0)
-  low            Int @default(0)
-
-  rawReport      Json?
-
-  createdAt      DateTime @default(now())
-
-  repository Repository @relation(fields: [repositoryId], references: [id])
+  hasDocker      Boolean    @default(false)
+  hasCI          Boolean    @default(false)
+  createdAt      DateTime   @default(now())
+  repository     Repository @relation(fields: [repositoryId], references: [id])
 }
 
 model Pipeline {
-  id           String   @id @default(uuid())
+  id           String     @id @default(uuid())
   repositoryId String
-
   name         String
   yamlContent  String
-
-  createdAt    DateTime @default(now())
-
+  createdAt    DateTime   @default(now())
   repository   Repository @relation(fields: [repositoryId], references: [id])
+}
+
+model SecurityScan {
+  id             String     @id @default(uuid())
+  repositoryId   String
+
+  tool           String
+  status         String     @default("PENDING")
+
+  critical       Int        @default(0)
+  high           Int        @default(0)
+  medium         Int        @default(0)
+  low            Int        @default(0)
+
+  rawReport      Json?
+
+  scanDate       DateTime   @default(now())
+  createdAt      DateTime   @default(now())
+
+  repository Repository @relation(fields: [repositoryId], references: [id])
 }
 
 model GovernanceDecision {
-  id           String   @id @default(uuid())
-  repositoryId String
-
-  riskLevel    String
-  autoMerge    Boolean
-  blocked      Boolean
-  reason       String
-
-  createdAt    DateTime @default(now())
-
-  repository   Repository @relation(fields: [repositoryId], references: [id])
+  id             String     @id @default(uuid())
+  repositoryId   String
+  riskLevel      String     @default("medium")
+  autoMerge      Boolean    @default(false)
+  blocking       Boolean    @default(false)
+  createdAt      DateTime   @default(now())
+  repository     Repository @relation(fields: [repositoryId], references: [id])
 }
+

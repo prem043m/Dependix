@@ -1,6 +1,7 @@
 {
   "name": "devsecops-assistant",
   "displayName": "DevSecOps Assistant",
+  "publisher": "prem043m",
   "description": "A structured sidebar for repository security scans and dependency checks.",
   "version": "0.0.1",
   "engines": {
