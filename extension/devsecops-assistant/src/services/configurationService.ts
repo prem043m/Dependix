@@ -12,4 +12,10 @@ export class ConfigurationService {
 
         return configuredUrl.replace(/\/$/, '');
     }
+
+    static getGitHubToken(): string | undefined {
+        return vscode.workspace
+            .getConfiguration('devsecops')
+            .get<string>('githubToken');
+    }
 }

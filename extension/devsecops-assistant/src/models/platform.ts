@@ -128,3 +128,77 @@ export type DependencyRefreshResponse = {
     repositoryId: string;
     evaluations: RenovateEvaluation[];
 };
+
+export type CICDProvider =
+    | 'github-actions'
+    | 'jenkins'
+    | 'gitlab-ci'
+    | 'circleci'
+    | 'azure-pipelines'
+    | 'security-workflow'
+    | 'unknown';
+
+export interface CICDDetectionRecord {
+    provider: CICDProvider;
+    name: string;
+    path: string;
+    detectedVia: 'github-api' | 'repository-file';
+    isSecurityWorkflow: boolean;
+}
+
+export interface CheckRunRecord {
+    id: number;
+    name: string;
+    status: string;
+    conclusion: string | null;
+    detailsUrl: string | null;
+    startedAt: string | null;
+    completedAt: string | null;
+    isSecurityGate: boolean;
+}
+
+export interface WorkflowRunRecord {
+    id: number;
+    name: string;
+    workflowName: string;
+    branch: string;
+    event: string;
+    status: string;
+    conclusion: string | null;
+    htmlUrl: string | null;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface CICDHealthRecord {
+    overall: 'healthy' | 'warning' | 'critical' | 'unknown';
+    summary: string;
+    failingRuns: number;
+    failedSecurityGates: number;
+}
+
+export interface GovernanceRecommendation {
+    title: string;
+    description: string;
+    priority: 'low' | 'medium' | 'high';
+}
+
+export interface StarterWorkflowRecommendation {
+    title: string;
+    rationale: string;
+    deliveryModel: 'pull-request-recommendation-only' | string;
+    yamlContent: string;
+}
+
+export interface CICDGovernanceOverlay {
+    hasExistingCICD: boolean;
+    detectedProviders: CICDDetectionRecord[];
+    workflowRuns: WorkflowRunRecord[];
+    checkRuns: CheckRunRecord[];
+    failedSecurityGates: CheckRunRecord[];
+    health: CICDHealthRecord;
+    recommendations?: GovernanceRecommendation[];
+    starterWorkflowRecommendation?: StarterWorkflowRecommendation | null;
+    analyzerNotes: string[];
+    analyzedAt: string;
+}

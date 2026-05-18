@@ -12,12 +12,9 @@ import { LiveUpdatesClient } from './sockets/liveUpdatesClient';
 let outputChannel: vscode.OutputChannel | undefined;
 
 function getOutputChannel(): vscode.OutputChannel {
-    if (!outputChannel) {
-        outputChannel =
-            vscode.window.createOutputChannel(
-                'DevSecOps Assistant'
-            );
-    }
+    outputChannel ??= vscode.window.createOutputChannel(
+        'DevSecOps Assistant'
+    );
 
     return outputChannel;
 }

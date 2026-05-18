@@ -10,17 +10,7 @@
     "Other"
   ],
   "activationEvents": [
-    "onStartupFinished",
-    "onCommand:devsecops.registerRepository",
-    "onCommand:devsecops.runSecurityScan",
-    "onCommand:devsecops.checkDependencies",
-    "onCommand:devsecops.analyzeWorkflow",
-    "onView:repositoriesView",
-    "onView:vulnerabilitiesView",
-    "onView:dependencyGovernanceView",
-    "onView:securityScansView",
-    "onView:scanHistoryView",
-    "onView:governanceAlertsView"
+    "onStartupFinished"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -213,7 +203,7 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
     "@types/vscode": "^1.120.0",
-    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-cli": "^0.0.11",
     "@vscode/test-electron": "^2.5.2",
     "esbuild": "^0.27.3",
     "eslint": "^9.39.3",
@@ -222,6 +212,7 @@
     "typescript-eslint": "^8.56.1"
   },
   "dependencies": {
+    "@octokit/rest": "^22.0.0",
     "axios": "^1.16.1",
     "socket.io-client": "^4.8.3"
   }
